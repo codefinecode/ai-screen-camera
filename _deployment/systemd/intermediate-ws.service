@@ -1,0 +1,19 @@
+[Unit]
+Description=Intermediate Service WebSocket Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/html/AIScreen-AICamera/intermediate-service
+ExecStart=/usr/bin/php artisan ws:serve --host=0.0.0.0 --port=8081
+Restart=always
+RestartSec=5
+Environment=APP_ENV=production
+Environment=QUEUE_CONNECTION=redis
+Environment=CACHE_STORE=redis
+Environment=REDIS_HOST=127.0.0.1
+Environment=REDIS_PORT=6379
+
+[Install]
+WantedBy=multi-user.target

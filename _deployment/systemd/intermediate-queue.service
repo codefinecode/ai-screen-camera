@@ -1,0 +1,16 @@
+[Unit]
+Description=Intermediate Service Queue Worker
+After=network.target redis.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/html/AIScreen-AICamera/intermediate-service
+Environment="PATH=/usr/bin:/usr/sbin"
+ExecStart=/usr/bin/php artisan queue:work --tries=10 --timeout=90
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

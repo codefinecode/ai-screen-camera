@@ -1,0 +1,63 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: intermediate-app
+    ports:
+      - "8080:8080"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      BROADCAST_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      IMPRESSION_GAP_SEC: 5
+      THROTTLE_MS: 300
+      AWS_INGEST_URL: ${AWS_INGEST_URL:-}
+      AWS_QUERY_URL: ${AWS_QUERY_URL:-}
+      AWS_BEARER_TOKEN: ${AWS_BEARER_TOKEN:-}
+    depends_on:
+      - redis
+    volumes:
+      - ./:/var/www/html
+  queue:
+    build: .
+    container_name: intermediate-queue
+    command: ["php", "artisan", "queue:work", "--tries=10"]
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      BROADCAST_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    volumes:
+      - ./:/var/www/html
+  redis:
+    image: redis:7-alpine
+    container_name: intermediate-redis
+    ports:
+      - "6379:6379"
+  ws:
+    build: .
+    container_name: intermediate-ws
+    command: ["php", "artisan", "ws:serve", "--host=0.0.0.0", "--port=8081"]
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+      BROADCAST_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./:/var/www/html
