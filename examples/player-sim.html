@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Player Simulator</title>
+    <style>
+        body { font-family: sans-serif; padding: 16px; max-width: 800px; margin: 0 auto; }
+        .log { white-space: pre-wrap; border: 1px solid #ccc; padding: 8px; height: 300px; overflow: auto; background: #f5f5f5; }
+        input, button { margin: 4px; padding: 6px; }
+        button { cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h3>Player Simulator (HTTP/SSE)</h3>
+    <label>API URL: <input id="url" value="http://localhost:8080" size="40"></label><br>
+    <label>Player ID: <input id="playerId" value="player-1"></label><br>
+    <button id="stateBtn">Send player.state</button>
+    <button id="streamBtn">Open SSE Stream</button>
+    <div id="log" class="log"></div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        const log = msg => { $('log').textContent += new Date().toISOString() + ' ' + msg + '\n'; $('log').scrollTop = $('log').scrollHeight; };
+
+        $('stateBtn').onclick = async () => {
+            const url = $('url').value;
+            const playerId = $('playerId').value;
+            const payload = {
+                type: 'player.state',
+                data: {
+                    playerId: playerId,
+                    content: [{ contentId: '12345678', contentType: 'media' }],
+                    timestamp: Math.floor(Date.now() / 1000)
+                }
+            };
+            try {
+                const res = await fetch(url + '/api/player/state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                log('→ POST /api/player/state: ' + JSON.stringify(payload));
+                log('← ' + res.status + ' ' + JSON.stringify(data));
+            } catch (e) {
+                log('ERROR: ' + e.message);
+            }
+        };
+
+        let eventSource = null;
+        $('streamBtn').onclick = () => {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                $('streamBtn').textContent = 'Open SSE Stream';
+                log('SSE closed');
+                return;
+            }
+            const url = $('url').value;
+            const playerId = $('playerId').value;
+            eventSource = new EventSource(url + '/api/player/stream?playerId=' + playerId);
+            eventSource.onmessage = e => log('← SSE message: ' + e.data);
+            eventSource.addEventListener('event.triggerStart', e => log('← triggerStart ' + e.data));
+            eventSource.addEventListener('event.triggerEnd', e => log('← triggerEnd ' + e.data));
+            eventSource.onerror = e => { log('SSE error'); eventSource.close(); eventSource = null; $('streamBtn').textContent = 'Open SSE Stream'; };
+            $('streamBtn').textContent = 'Close SSE Stream';
+            log('SSE opened for playerId=' + playerId);
+        };
+    </script>
+</body>
+</html>
+
