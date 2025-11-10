@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: Dashboards Frames API
+  version: 1.0.0
+paths:
+  /api/dashboards/frames:
+    get:
+      summary: Aggregated frames analytics
+      parameters:
+        - in: query
+          name: filter[start]
+          schema: { type: string, format: date-time }
+          required: true
+        - in: query
+          name: filter[end]
+          schema: { type: string, format: date-time }
+          required: true
+        - in: query
+          name: filter[screenIds]
+          schema: { type: string }
+          required: true
+        - in: query
+          name: filter[playlistIds]
+          schema: { type: string }
+        - in: query
+          name: filter[mediaIds]
+          schema: { type: string }
+        - in: query
+          name: filter[canvasIds]
+          schema: { type: string }
+        - in: query
+          name: filter[appsIds]
+          schema: { type: string }
+        - in: query
+          name: filter[instanceIds]
+          schema: { type: string }
+        - in: query
+          name: bucketType
+          schema: { type: string, enum: [hourly8, day, week, month, year] }
+        - in: query
+          name: returnRawFrames
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      frames:
+                        type: array
+                        items:
+                          type: object
+                  - type: object
+                    properties:
+                      bucketType: { type: string }
+                      totals:
+                        type: object
+                        properties:
+                          faces: { type: integer }
+                          views: { type: integer }
+                          impressions: { type: integer }
+                          gender:
+                            type: object
+                            properties:
+                              male: { type: integer }
+                              female: { type: integer }
+                          genderPct:
+                            type: object
+                            properties:
+                              male: { type: number }
+                              female: { type: number }
+                          emotion:
+                            type: object
+                            properties:
+                              Happy: { type: integer }
+                              Satisfied: { type: integer }
+                              Neutral: { type: integer }
+                              Unhappy: { type: integer }
+                          emotionPct:
+                            type: object
+                            additionalProperties: { type: number }
+                          glasses:
+                            type: object
+                            properties:
+                              with: { type: integer }
+                              without: { type: integer }
+                          glassesPct:
+                            type: object
+                            properties:
+                              with: { type: number }
+                              without: { type: number }
+                          dwellTime:
+                            type: object
+                            properties:
+                              sum: { type: integer }
+                              avg: { type: number }
+                          attentionTime:
+                            type: object
+                            properties:
+                              sum: { type: integer }
+                              avg: { type: number }
+                      buckets:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            bucket: { type: string }
+                            faces: { type: integer }
+                            gender:
+                              type: object
+                              properties:
+                                male: { type: integer }
+                                female: { type: integer }
+                            emotion:
+                              type: object
+                              properties:
+                                Happy: { type: integer }
+                                Satisfied: { type: integer }
+                                Neutral: { type: integer }
+                                Unhappy: { type: integer }
+                            glasses:
+                              type: object
+                              properties:
+                                with: { type: integer }
+                                without: { type: integer }
+                            dwellTime:
+                              type: object
+                              properties:
+                                sum: { type: integer }
+                                avg: { type: number }
+                            attentionTime:
+                              type: object
+                              properties:
+                                sum: { type: integer }
+                                avg: { type: number }
+                            ageBins:
+                              type: object
+                              properties:
+                                "<20": { type: integer }
+                                "20-29": { type: integer }
+                                "30-45": { type: integer }
+                                "45+": { type: integer }
+        '400':
+          description: Bad Request
